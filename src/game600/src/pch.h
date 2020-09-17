@@ -22,6 +22,10 @@
 #include <string_view>
 #include <tuple>
 
+#include <imgui.h>
+#include <imgui_impl_win32.h>
+#include <imgui_impl_dx11.h>
+
 #ifdef _UNICODE
 #   define tstring std::wstring
 #   define tstring_view std::wstring_view

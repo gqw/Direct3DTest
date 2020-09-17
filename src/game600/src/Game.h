@@ -1,6 +1,6 @@
 #pragma once
 #include "pch.h"
-
+#include "Win32Imgui.h"
 
 class Game {
 public:
@@ -15,6 +15,7 @@ public:
     void OnRender();
     void OnDestroy();
 
+    bool OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
     void OnActivated() {}
     void OnDeactivated() {}
     void OnSuspending() {}
@@ -47,4 +48,6 @@ private:
 	Microsoft::WRL::ComPtr<IDXGISwapChain1>         m_swapChain;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  m_renderTargetView;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  m_depthStencilView;
+
+    std::unique_ptr<Win32Imgui>                     m_win32Imgui;
 };

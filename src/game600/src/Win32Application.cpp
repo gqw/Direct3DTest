@@ -68,6 +68,8 @@ HWND Win32Application::InitWindow(HINSTANCE hInstance, int cmdShow, Game &game)
 LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     auto pGame = reinterpret_cast<Game *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (pGame && pGame->OnMessage(hWnd, msg, wParam, lParam)) return true;
+
     switch (msg)
     {
     case  WM_CREATE: {

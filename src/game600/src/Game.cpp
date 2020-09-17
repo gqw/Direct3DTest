@@ -1,8 +1,11 @@
 #include "game.h"
 #include <algorithm>
+
+#include "Win32Imgui.h"
+
 #ifdef WIN32
-#undef min
-#undef max
+#   undef min
+#   undef max
 #endif
 
 using namespace DirectX;
@@ -10,9 +13,13 @@ using Microsoft::WRL::ComPtr;
 
 bool Game::OnInit(HWND hWnd) {
     m_hWnd = hWnd;
+    m_win32Imgui = std::make_unique<Win32Imgui>();
+    
 
     CreateDevice();
     CreateResources();
+
+    m_win32Imgui->OnInit(hWnd, m_d3dDevice.Get(), m_d3dContext.Get());
     return true;
 }
 
@@ -25,11 +32,17 @@ void Game::OnRender() {
 	CD3D11_VIEWPORT viewport(0.0f, 0.0f, float(m_uiWidth), float(m_uiHeight));
 	m_d3dContext->RSSetViewports(1, &viewport);
 
+
+    m_win32Imgui->OnRender();
     Present();
 }
 
 void Game::OnDestroy() {
+    m_win32Imgui->OnDestory();
+}
 
+bool Game::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    return m_win32Imgui->OnMessage(hWnd, msg, wParam, lParam);
 }
 
 void Game::CreateDevice() {
