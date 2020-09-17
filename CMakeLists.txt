@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.6)
 
-project(TestGame)
+project(Direct3DTest)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/) 
 
@@ -13,3 +13,4 @@ add_subdirectory(src/game400)
 add_subdirectory(src/game500)
 add_subdirectory(src/game501)
 add_subdirectory(src/game600)
+add_subdirectory(src/game700)
