@@ -11,9 +11,18 @@
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
+bool Game::Init(tstring_view title, tstring_view className, UINT width, UINT height) {
+    m_strTitle = title.data();
+    m_strClassName = className.data();
+    m_uiWidth = width;
+    m_uiHeight = height;
+    return true;
+}
+
+
 bool Game::OnInit(HWND hWnd) {
     m_hWnd = hWnd;
-    m_win32Imgui = std::make_unique<Win32Imgui>();
+    m_win32Imgui = std::make_unique<Win32Imgui>(this);
     
 
     CreateDevice();

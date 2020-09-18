@@ -21,6 +21,8 @@
 #include <string>
 #include <string_view>
 #include <tuple>
+#include <list>
+#include <map>
 
 #include <imgui.h>
 #include <imgui_impl_win32.h>
@@ -61,4 +63,12 @@ inline void ThrowIfFailed(tstring_view file, uint32_t lineNo, HRESULT hr) {
 	throw std::logic_error(pinfo);
 }
 
+inline void ThrowLogicError(std::string_view file, uint32_t lineNo, std::string_view condition, std::string_view desc) {
+	std::string errInfo(file);
+	errInfo = errInfo + "(" + std::to_string(lineNo) + "): " + (condition.empty() ? "" : condition.data() + std::string(", ")) + desc.data();
+	throw std::logic_error(errInfo);
+}
+
 #define THROW_IF_FAILED(hr) ThrowIfFailed(_T(__FILE__), __LINE__, hr)
+#define THROW_ERROR(desc) ThrowLogicError(_T(__FILE__), __LINE__, "", (desc))
+#define ASSERT_THROW(condition, desc) if (!(condition)) ThrowLogicError(__FILE__, __LINE__, (#condition), (desc))

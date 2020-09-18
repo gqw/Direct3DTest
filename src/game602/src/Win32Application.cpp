@@ -49,7 +49,7 @@ HWND Win32Application::InitWindow(HINSTANCE hInstance, int cmdShow, Game &game)
 	if (!RegisterClassEx(&wcex))
 		return nullptr;
 
-	auto [w, h] = game.GetDefaultSize();
+	auto [w, h] = game.GetWindowSize();
 	RECT rc = { 0, 0, LONG(w), LONG(h) };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, false);
 

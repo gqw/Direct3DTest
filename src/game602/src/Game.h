@@ -4,13 +4,9 @@
 
 class Game {
 public:
-    Game(tstring_view title, tstring_view className, UINT width, UINT height)
-        : m_strTitle(title.data())
-        , m_strClassName(className.data())
-        , m_uiWidth(width)
-        , m_uiHeight(height) {
-    }
+    static Game& Inst() { static Game game; return game; }
 
+    bool Init(tstring_view title, tstring_view className, UINT width, UINT height);
     bool OnInit(HWND hWnd);
     void OnRender();
     void OnDestroy();
@@ -24,7 +20,9 @@ public:
     void OnChangeFullscreen();
     void OnDeviceLost();
 
-    std::tuple<UINT, UINT> GetDefaultSize() { return {m_uiWidth, m_uiHeight}; }
+    std::tuple<UINT, UINT> GetWindowSize() { return {m_uiWidth, m_uiHeight}; }
+    UINT width() { return m_uiWidth; }
+    UINT height() { return m_uiHeight; }
     const tstring& title() { return m_strTitle; }
     const tstring& className() { return m_strClassName; }
 
