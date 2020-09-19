@@ -31,6 +31,11 @@ public:
 private:
     void CreateDevice();
     void CreateResources();
+    void CreateVectexShader();
+    void CreatePixelShader();
+    void CreateVertexBuffer();
+    void LoadBackgroundPng();
+
     void Clear();
     void Present();
 
@@ -47,7 +52,14 @@ private:
 
 	Microsoft::WRL::ComPtr<IDXGISwapChain1>         m_swapChain;
 	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>  m_renderTargetView;
+    Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>  m_backgroundView;
+    Microsoft::WRL::ComPtr<ID3D11SamplerState> m_samplerLinear;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  m_depthStencilView;
 
-    std::unique_ptr<Win32Imgui>                     m_win32Imgui;
+    Microsoft::WRL::ComPtr<ID3D11VertexShader> m_vertexShader;
+    Microsoft::WRL::ComPtr<ID3D11InputLayout> m_vertexLayout;
+    Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader> m_pixelShader;
+    
+    std::unique_ptr<Win32Imgui>                     m_win32Imgui;   
 };

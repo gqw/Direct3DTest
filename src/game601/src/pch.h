@@ -12,8 +12,12 @@
 #include <d3d11.h>
 #include <d3d11_1.h>
 #include <dxgi1_2.h>
+#include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <DirectXColors.h>
+
+#include <DirectXTex.h>
+
 #include <wrl/client.h>
 
 #include <codecvt>
@@ -31,11 +35,14 @@
 #   define tstring_view std::wstring_view
 #   define to_tstring std::to_wstring
 #   define tstring_to_string(str) wstring_to_utf8(str)
+
+#	define D3DX11CompileFromFile D3DX11CompileFromFileW
 #else
 #   define tstring std::string
 #   define tstring_view std::string_view
 #   define to_tstring std::to_string
 #   define tstring_to_string(str) (str)
+#	define D3DX11CompileFromFile D3DX11CompileFromFileA
 #endif
 
 inline std::wstring utf8_to_wstring(const std::string& str)

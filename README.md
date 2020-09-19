@@ -44,13 +44,13 @@
 
 ![game600](./doc/captures/game600.png)
 
-整合ImGui
+ImGui Demo
 
 ### game601
 
 ![game601](./doc/captures/game601.png)
 
-ImGui Demo
+整合ImGui
 
 ### game602
 

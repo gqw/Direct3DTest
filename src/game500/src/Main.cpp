@@ -10,7 +10,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 
     try
     {
-        Game game(_T("TestGame1"), _T("TestGame1WndClass"), 800, 600);
+        Game game(_T(PROJECT_NAME), _T(PROJECT_NAME"WndClass"), 800, 600);
 		return Win32Application::Run(game, hInstance, cmdShow);
     }
     catch (std::exception e)

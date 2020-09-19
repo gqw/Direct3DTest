@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.6)
 
 project(Direct3DTest)
 
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin/) 
+SET(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin/) 
 
 add_subdirectory(third/DirectXTex)
 

@@ -8,6 +8,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
     UNREFERENCED_PARAMETER(hInstance);
     UNREFERENCED_PARAMETER(cmdLine);
 
-    Game game(_T("TestGame1"), _T("TestGame1WndClass"), 800, 600);
+    Game game(_T("game100"), _T("game100WndClass"), 800, 600);
     return Win32Application::Run(game, hInstance, cmdShow);
 }
