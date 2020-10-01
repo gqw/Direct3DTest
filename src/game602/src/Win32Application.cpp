@@ -85,6 +85,17 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
     case WM_SIZE:
         Win32Application::OnSize(pGame, hWnd, wParam, lParam);
         break;
+	
+    case WM_DISPLAYCHANGE: {
+		if (pGame)
+		{
+			RECT rc;
+			GetClientRect(hWnd, &rc);
+
+			pGame->OnWindowSizeChanged(rc.right - rc.left, rc.bottom - rc.top);
+		}
+		break;
+	}
 
     case WM_ENTERSIZEMOVE:
         s_in_sizemove = true;
@@ -126,6 +137,7 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
             {
                 pGame->OnDeactivated();
             }
+            // OutputDebugStringA((std::string("active, ") + std::to_string(wParam) + "\r\n").c_str());
         }
         break;
 
@@ -150,6 +162,7 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
         break;
 
     case WM_DESTROY:
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
         PostQuitMessage(0);
         break;
     }
@@ -187,8 +200,5 @@ void Win32Application::OnSize(Game* pGame, HWND hWnd, WPARAM wParam, LPARAM lPar
 			pGame->OnResuming();
 		s_in_suspend = false;
 	}
-	else if (!s_in_sizemove && pGame)
-	{
-		pGame->OnWindowSizeChanged(LOWORD(lParam), HIWORD(lParam));
-	}
+    pGame->OnWindowSizeChanged(LOWORD(lParam), HIWORD(lParam));
 }

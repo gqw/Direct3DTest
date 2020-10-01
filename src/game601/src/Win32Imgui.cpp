@@ -12,6 +12,8 @@ bool Win32Imgui::OnInit(HWND hwnd, Microsoft::WRL::ComPtr<ID3D11Device> d3dDevic
 	ImGui::StyleColorsDark();
 	ImGui_ImplWin32_Init(hwnd);
 	ImGui_ImplDX11_Init(m_d3dDevice.Get(), m_d3dDeviceContext.Get());
+
+
 	return true;
 }
 

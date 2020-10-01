@@ -1,6 +1,7 @@
 #include "Win32Application.h"
 
 #include "game.h"
+#include "meow_textapp.h"
 
 bool Win32Application::s_in_sizemove = false;
 bool Win32Application::s_in_suspend = false;
@@ -65,14 +66,14 @@ HWND Win32Application::InitWindow(HINSTANCE hInstance, int cmdShow, Game &game)
     return hWnd;
 }
 
+MeowTextApp* app = nullptr;
 LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     auto pGame = reinterpret_cast<Game *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
     switch (msg)
     {
-    case  WM_CREATE: {
-		LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
-		SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+    case WM_CREATE: {
+        app = new MeowTextApp(hWnd);
         break;
     }
     case WM_PAINT:
@@ -83,17 +84,6 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
     case WM_SIZE:
         Win32Application::OnSize(pGame, hWnd, wParam, lParam);
         break;
-
-	case WM_DISPLAYCHANGE: {
-		if (pGame)
-		{
-			RECT rc;
-			GetClientRect(hWnd, &rc);
-
-			pGame->OnWindowSizeChanged(rc.right - rc.left, rc.bottom - rc.top);
-		}
-		break;
-	}
 
     case WM_ENTERSIZEMOVE:
         s_in_sizemove = true;
@@ -110,12 +100,6 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
         }
         break;
 
-    case WM_KEYDOWN: {
-        if (wParam == VK_SPACE) {
-            if (pGame) pGame->OnChangeFullscreen();
-        }
-        break;
-    }
     case WM_GETMINMAXINFO:
     {
         auto info = reinterpret_cast<MINMAXINFO *>(lParam);

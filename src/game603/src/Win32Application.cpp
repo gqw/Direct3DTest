@@ -1,5 +1,7 @@
 #include "Win32Application.h"
 
+#include "imm/meow_textapp.h"
+
 #include "game.h"
 
 bool Win32Application::s_in_sizemove = false;
@@ -12,8 +14,8 @@ int Win32Application::Run(Game& game, HINSTANCE prevInstance, int cmdShow)
     if (!DirectX::XMVerifyCPUSupport())
         return 1;
 
-    if (FAILED(CoInitializeEx(nullptr, COINITBASE_MULTITHREADED)))
-        return 1;
+    //if (FAILED(CoInitializeEx(nullptr, COINITBASE_MULTITHREADED)))
+    //    return 1;
 
     HWND hWnd = InitWindow(prevInstance, cmdShow, game);
     game.OnInit(hWnd);
@@ -29,7 +31,7 @@ int Win32Application::Run(Game& game, HINSTANCE prevInstance, int cmdShow)
 		{
             game.OnRender();
 		}
-	}
+  	}
 	game.OnDestroy();
     return int(msg.wParam);
 }
@@ -49,7 +51,7 @@ HWND Win32Application::InitWindow(HINSTANCE hInstance, int cmdShow, Game &game)
 	if (!RegisterClassEx(&wcex))
 		return nullptr;
 
-	auto [w, h] = game.GetDefaultSize();
+	auto [w, h] = game.GetWindowSize();
 	RECT rc = { 0, 0, LONG(w), LONG(h) };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, false);
 
@@ -65,14 +67,18 @@ HWND Win32Application::InitWindow(HINSTANCE hInstance, int cmdShow, Game &game)
     return hWnd;
 }
 
+MeowTextApp *app = nullptr;
 LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     auto pGame = reinterpret_cast<Game *>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    if (pGame && pGame->OnMessage(hWnd, msg, wParam, lParam) == 0) return 0;
+
     switch (msg)
     {
     case  WM_CREATE: {
 		LPCREATESTRUCT pCreateStruct = reinterpret_cast<LPCREATESTRUCT>(lParam);
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(pCreateStruct->lpCreateParams));
+        app = new MeowTextApp(hWnd);
         break;
     }
     case WM_PAINT:
@@ -84,7 +90,7 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
         Win32Application::OnSize(pGame, hWnd, wParam, lParam);
         break;
 
-	case WM_DISPLAYCHANGE: {
+    case WM_DISPLAYCHANGE: {
 		if (pGame)
 		{
 			RECT rc;
@@ -92,8 +98,9 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
 
 			pGame->OnWindowSizeChanged(rc.right - rc.left, rc.bottom - rc.top);
 		}
-		break;
-	}
+        break;
+    }
+
 
     case WM_ENTERSIZEMOVE:
         s_in_sizemove = true;
@@ -112,7 +119,7 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
 
     case WM_KEYDOWN: {
         if (wParam == VK_SPACE) {
-            if (pGame) pGame->OnChangeFullscreen();
+            // if (pGame) pGame->OnChangeFullscreen();
         }
         break;
     }
@@ -159,6 +166,7 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
         break;
 
     case WM_DESTROY:
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
         PostQuitMessage(0);
         break;
     }
@@ -196,7 +204,7 @@ void Win32Application::OnSize(Game* pGame, HWND hWnd, WPARAM wParam, LPARAM lPar
 			pGame->OnResuming();
 		s_in_suspend = false;
 	}
-	else if (!s_in_sizemove && pGame)
+	if (!s_in_sizemove && pGame)
 	{
 		pGame->OnWindowSizeChanged(LOWORD(lParam), HIWORD(lParam));
 	}

@@ -4,13 +4,9 @@
 
 class Game {
 public:
-    Game(tstring_view title, tstring_view className, UINT width, UINT height)
-        : m_strTitle(title.data())
-        , m_strClassName(className.data())
-        , m_uiWidth(width)
-        , m_uiHeight(height) {
-    }
+    static Game& Inst() { static Game game; return game; }
 
+    bool Init(tstring_view title, tstring_view className, UINT width, UINT height);
     bool OnInit(HWND hWnd);
     void OnRender();
     void OnDestroy();
@@ -24,13 +20,16 @@ public:
     void OnChangeFullscreen();
     void OnDeviceLost();
 
-    std::tuple<UINT, UINT> GetDefaultSize() { return {m_uiWidth, m_uiHeight}; }
+    std::tuple<UINT, UINT> GetWindowSize() { return {m_uiWidth, m_uiHeight}; }
+    UINT width() { return m_uiWidth; }
+    UINT height() { return m_uiHeight; }
     const tstring& title() { return m_strTitle; }
     const tstring& className() { return m_strClassName; }
+    BOOL fullscreen() { return m_isFullscreen; }
 
 private:
     void CreateDevice();
-    void CreateResources();
+    void CreateResources(bool forcecreate = false);
     void CreateVectexShader();
     void CreatePixelShader();
     void CreateVertexBuffer();
@@ -45,7 +44,7 @@ private:
     UINT m_uiWidth = 800;
     UINT m_uiHeight = 600;
     HWND m_hWnd = nullptr;
-    BOOL m_isFullscreen = false;
+    BOOL m_isFullscreen = FALSE;
 
     D3D_FEATURE_LEVEL m_freatureLevel = D3D_FEATURE_LEVEL_9_1;
 	Microsoft::WRL::ComPtr<ID3D11Device1>           m_d3dDevice;

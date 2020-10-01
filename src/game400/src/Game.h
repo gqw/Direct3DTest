@@ -42,6 +42,7 @@ private:
     UINT m_uiWidth = 800;
     UINT m_uiHeight = 600;
     HWND m_hWnd = nullptr;
+    BOOL m_isFullscreen = false;
 
     D3D_FEATURE_LEVEL m_freatureLevel = D3D_FEATURE_LEVEL_9_1;
 	Microsoft::WRL::ComPtr<ID3D11Device1>           m_d3dDevice;

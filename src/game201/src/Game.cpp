@@ -1,9 +1,4 @@
 #include "game.h"
-#include <algorithm>
-#ifdef WIN32
-#undef min
-#undef max
-#endif
 
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
@@ -19,17 +14,11 @@ bool Game::OnInit(HWND hWnd) {
 void Game::OnRender() {
     Clear();
 
-	// 不能使用&m_renderTargetView operator &会调用 InternalRelease()， 导致m_renderTargetView为空
-	m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
-
-	CD3D11_VIEWPORT viewport(0.0f, 0.0f, float(m_uiWidth), float(m_uiHeight));
-	m_d3dContext->RSSetViewports(1, &viewport);
-
     Present();
 }
 
 void Game::OnDestroy() {
-    if (m_swapChain) m_swapChain->SetFullscreenState(FALSE, nullptr);
+
 }
 
 void Game::CreateDevice() {
@@ -79,7 +68,6 @@ void Game::CreateDevice() {
 }
 
 void Game::CreateResources() {
-    if (m_d3dContext == nullptr) return;
     ID3D11RenderTargetView* nullViews[] = { nullptr };
     m_d3dContext->OMSetRenderTargets(_countof(nullViews), nullViews, nullptr);
     m_renderTargetView.Reset();
@@ -120,7 +108,6 @@ void Game::CreateResources() {
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.BufferCount = backBufferCount;
         swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
         DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullscreenDesc = {};
         fullscreenDesc.Windowed = TRUE;
@@ -135,6 +122,16 @@ void Game::CreateResources() {
     THROW_IF_FAILED(m_d3dDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, &m_renderTargetView));
 
     ComPtr<ID3D11Texture2D> depthStencil;
+    /*CD3D11_TEXTURE2D_DESC depthStencilDesc = {};
+    depthStencilDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    depthStencilDesc.Width = m_uiWidth;
+    depthStencilDesc.Height = m_uiHeight;
+    depthStencilDesc.ArraySize = 1;
+    depthStencilDesc.MipLevels = 1;
+    depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthStencilDesc.SampleDesc.Count = 1;
+    depthStencilDesc.SampleDesc.Quality = 0;
+    */
     CD3D11_TEXTURE2D_DESC depthStencilDesc(DXGI_FORMAT_D24_UNORM_S8_UINT, m_uiWidth, m_uiHeight, 1, 1, D3D11_BIND_DEPTH_STENCIL);
     THROW_IF_FAILED(m_d3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, depthStencil.GetAddressOf()));
     
@@ -145,6 +142,12 @@ void Game::CreateResources() {
 void Game::Clear() {
     m_d3dContext->ClearRenderTargetView(m_renderTargetView.Get(), Colors::CornflowerBlue);
     m_d3dContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+
+    // 不能使用&m_renderTargetView operator &会调用 InternalRelease()， 导致m_renderTargetView为空
+    m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
+
+    CD3D11_VIEWPORT viewport(0.0f, 0.0f, float(m_uiWidth), float(m_uiHeight));
+    m_d3dContext->RSSetViewports(1, &viewport);
 }
 
 void Game::Present() {
@@ -159,6 +162,7 @@ void Game::Present() {
 	}
 }
 
+
 void Game::OnDeviceLost()
 {
 	m_depthStencilView.Reset();
@@ -170,20 +174,4 @@ void Game::OnDeviceLost()
 	CreateDevice();
 
 	CreateResources();
-}
-
-void Game::OnChangeFullscreen() {
-    if (m_swapChain == nullptr) return;
-
-    BOOL isFullscreen = FALSE;
-    THROW_IF_FAILED(m_swapChain->GetFullscreenState(&isFullscreen, nullptr));
-    THROW_IF_FAILED(m_swapChain->SetFullscreenState(!isFullscreen, nullptr));
-    CreateResources();
-}
-
-void Game::OnWindowSizeChanged(int width, int height) {
-	m_uiWidth = std::max(width, 1);
-	m_uiHeight = std::max(height, 1);
-
-    CreateResources();
 }

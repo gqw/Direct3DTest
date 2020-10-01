@@ -12,8 +12,8 @@ public:
     void OnDestroy();
 
     bool OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-    void OnActivated() {}
-    void OnDeactivated() {}
+    void OnActivated();
+    void OnDeactivated();
     void OnSuspending() {}
     void OnResuming() {}
     void OnWindowSizeChanged(int width, int height);
@@ -25,6 +25,7 @@ public:
     UINT height() { return m_uiHeight; }
     const tstring& title() { return m_strTitle; }
     const tstring& className() { return m_strClassName; }
+    BOOL fullscreen() { return m_isFullscreen; }
 
 private:
     void CreateDevice();
@@ -43,6 +44,7 @@ private:
     UINT m_uiWidth = 800;
     UINT m_uiHeight = 600;
     HWND m_hWnd = nullptr;
+    BOOL m_isFullscreen = FALSE;
 
     D3D_FEATURE_LEVEL m_freatureLevel = D3D_FEATURE_LEVEL_9_1;
 	Microsoft::WRL::ComPtr<ID3D11Device1>           m_d3dDevice;
@@ -60,4 +62,5 @@ private:
     Microsoft::WRL::ComPtr<ID3D11PixelShader> m_pixelShader;
     
     std::unique_ptr<Win32Imgui>                     m_win32Imgui;   
+    
 };

@@ -57,3 +57,10 @@ ImGui Demo
 ![game602](./doc/captures/game602.png)
 
 使用ImGui，创建聊天框
+
+
+### game602
+
+![game602](./doc/captures/game602.png)
+
+使用ImGui，输入法处理

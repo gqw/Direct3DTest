@@ -47,7 +47,7 @@ void Game::OnRender() {
 }
 
 void Game::OnDestroy() {
-
+    if (m_swapChain) m_swapChain->SetFullscreenState(FALSE, nullptr);
 }
 
 void Game::CreateDevice() {
@@ -140,6 +140,7 @@ void Game::CreateResources() {
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.BufferCount = backBufferCount;
         swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
         DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullscreenDesc = {};
         fullscreenDesc.Windowed = TRUE;

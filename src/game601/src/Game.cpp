@@ -55,7 +55,25 @@ void Game::OnRender() {
 }
 
 void Game::OnDestroy() {
+    if (m_swapChain) m_swapChain->SetFullscreenState(FALSE, nullptr);
+
     m_win32Imgui->OnDestory();
+
+	m_d3dDevice.Reset();
+	m_d3dContext.Reset();
+
+	m_swapChain.Reset();
+	m_renderTargetView.Reset();
+	m_backgroundView.Reset();
+	m_samplerLinear.Reset();
+	m_depthStencilView.Reset();
+
+	m_vertexShader.Reset();
+	m_vertexLayout.Reset();
+	m_vertexBuffer.Reset();
+	m_pixelShader.Reset();
+
+	m_win32Imgui.reset();
 }
 
 bool Game::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -150,6 +168,7 @@ void Game::CreateResources() {
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 		swapChainDesc.BufferCount = backBufferCount;
         swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
         DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullscreenDesc = {};
         fullscreenDesc.Windowed = TRUE;
@@ -204,9 +223,9 @@ void Game::OnDeviceLost()
 void Game::OnChangeFullscreen() {
     if (m_swapChain == nullptr) return;
 
-    BOOL isFullscreen = FALSE;
-    THROW_IF_FAILED(m_swapChain->GetFullscreenState(&isFullscreen, nullptr));
-    THROW_IF_FAILED(m_swapChain->SetFullscreenState(!isFullscreen, nullptr));
+    THROW_IF_FAILED(m_swapChain->GetFullscreenState(&m_isFullscreen, nullptr));
+    THROW_IF_FAILED(m_swapChain->SetFullscreenState(!m_isFullscreen, nullptr));
+    CreateResources();
 }
 
 void Game::OnWindowSizeChanged(int width, int height) {
