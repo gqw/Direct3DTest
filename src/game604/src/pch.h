@@ -42,6 +42,8 @@
 #include <imm.h>
 #include <msctf.h>
 
+#include "log.h"
+
 #ifdef _UNICODE
 #   define tstring std::wstring
 #   define tstring_view std::wstring_view

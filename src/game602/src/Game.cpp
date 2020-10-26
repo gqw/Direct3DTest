@@ -3,6 +3,9 @@
 
 #include "Win32Imgui.h"
 
+#include <wlclient.h>
+#include <msctf.h>
+
 #ifdef WIN32
 #   undef min
 #   undef max
@@ -22,6 +25,8 @@ bool Game::Init(tstring_view title, tstring_view className, UINT width, UINT hei
     m_strClassName = className.data();
     m_uiWidth = width;
     m_uiHeight = height;
+
+
     return true;
 }
 
@@ -30,7 +35,6 @@ bool Game::OnInit(HWND hWnd) {
     m_hWnd = hWnd;
     m_win32Imgui = std::make_unique<Win32Imgui>(this);
     
-
     CreateDevice();
     CreateResources();
 	CreateVectexShader();
@@ -38,6 +42,7 @@ bool Game::OnInit(HWND hWnd) {
     LoadBackgroundPng();
 
     m_win32Imgui->OnInit(hWnd, m_d3dDevice.Get(), m_d3dContext.Get());
+
     return true;
 }
 

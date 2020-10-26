@@ -30,7 +30,7 @@ void ViewChat::OnRender() {
 				ImGui::EndTabItem();
 			}
 
-			ImGui::BeginChild("Chat History", ImVec2(0, -60), true, ImGuiWindowFlags_None);
+			ImGui::BeginChild("Chat History", ImVec2(0, -30), true, ImGuiWindowFlags_None);
 			for (const auto& h : *plist)
 			{
 				ImGui::Text(h.c_str());
@@ -43,10 +43,7 @@ void ViewChat::OnRender() {
 			auto itemWindowSize = ImGui::GetItemRectSize();
 
 			ImGui::PushItemWidth(windowSize.x - 60);
-			ImGui::InputText("aa", m_strChatContent.data(), m_strChatContent.length());
-			ImGui::PopItemWidth();
-			ImGui::PushItemWidth(windowSize.x - 60);
-			ImGui::InputText("bb", m_strChatContent.data(), m_strChatContent.length());
+			ImGui::InputText("##aa", m_strChatContent.data(), m_strChatContent.length());
 			ImGui::PopItemWidth();
 			ImGui::SameLine();
 			if (ImGui::Button("Send")) {
