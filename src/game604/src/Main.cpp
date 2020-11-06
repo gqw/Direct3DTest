@@ -16,7 +16,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
     if (!logger::get().init("logs/test.log")) {
         return 1;
     }
-    logger::get().set_level(spdlog::level::trace);
+    logger::get().set_level(spdlog::level::debug);
 
 	// LOG_INFO("test {}", 1);
 	// PRINT_INFO("test print log, %d", 55);

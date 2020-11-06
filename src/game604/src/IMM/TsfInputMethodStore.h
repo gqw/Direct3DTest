@@ -20,7 +20,7 @@ public:
 
 	bool OnInit(HWND hWnd);
 	bool OnDestroy();
-	void SetFocus(bool isFocus = false);
+	void SetFocus(bool isFocus, const std::wstring& content, std::size_t insert_pos);
 	void SwitchImeConvert();
 
 	HWND window_handle() { return m_hWnd; }
@@ -117,6 +117,11 @@ private:
 	// Checks if the document has a read and write lock.
 	bool HasReadWriteLock() const;
 	void CheckInputLocale();
+	
+	void FocusDocument();
+
+	// 清除内容
+	void Clear();
 
 private:
 	bool m_isOpenImm = false;

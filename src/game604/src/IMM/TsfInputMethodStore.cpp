@@ -14,7 +14,6 @@ const TsViewCookie kViewCookie = 1;
 bool TsfInputMethodStore::OnInit(HWND hWnd) {
 	TRACE_FUNC();
 	ASSERT_THROW(IsWindow(hWnd), "imm init failed.");
-
 	m_hWnd = hWnd;
 	m_dwRefernce = 1;
 
@@ -33,6 +32,7 @@ bool TsfInputMethodStore::OnInit(HWND hWnd) {
 	THROW_IF_FAILED(m_itfUIElementMgr->QueryInterface(IID_ITfSource, &source));
 	THROW_IF_FAILED(source->AdviseSink(IID_ITfUIElementSink, (ITfUIElementSink*)this, &m_dwUIElementSinkCookie));
 	THROW_IF_FAILED(source->AdviseSink(IID_ITfThreadMgrEventSink, (ITfThreadMgrEventSink*)this, &m_dwThreadMgrEventSinkCookie));
+	
 	
 	THROW_IF_FAILED(threadmgr->CreateDocumentMgr(&m_itfDocumentMgr));
 
@@ -67,22 +67,14 @@ bool TsfInputMethodStore::OnInit(HWND hWnd) {
 		SysFreeString(desc);
 	} while (false);
 	
-	
-	// THROW_IF_FAILED(source3->AdviseSink(IID_ITfLanguageProfileNotifySink, (ITfLanguageProfileNotifySink*)this, &m_dwLanguageProfileNotifySinkCookie2));
+	m_himcOrg = ImmGetContext(hWnd);
+	ImmReleaseContext(hWnd, m_himcOrg);
 
+	if (::SetWindowSubclass(hWnd, TsfInputMethodStore::ImmSubClassProc,
+		reinterpret_cast<UINT_PTR>(TsfInputMethodStore::ImmSubClassProc),
+		reinterpret_cast<DWORD_PTR>(this))) {
 
-
-	// openMode->SetValue(m_dwClientId, )
-
-	//m_himcOrg = ImmGetContext(hWnd);
-	//ImmReleaseContext(hWnd, m_himcOrg);
-	//if (!m_himcOrg) m_bDisableIme = true;
-
-	//if (::SetWindowSubclass(hWnd, TsfInputMethodStore::ImmSubClassProc,
-	//	reinterpret_cast<UINT_PTR>(TsfInputMethodStore::ImmSubClassProc),
-	//	reinterpret_cast<DWORD_PTR>(this))) {
-
-	//}
+	}
 	return true;
 }
 
@@ -99,8 +91,6 @@ void TsfInputMethodStore::SwitchImeConvert() {
 	TfClientId tid;
 	clientId->GetClientId(IID_ITfClientId, &tid);
 
-
-
 	if (openMode && convMode)
 	{
 		VARIANT valOpenMode;
@@ -114,17 +104,22 @@ void TsfInputMethodStore::SwitchImeConvert() {
 		valConvMode.lVal = ((valConvMode.lVal & TF_CONVERSIONMODE_NATIVE) == 0) ? TF_CONVERSIONMODE_NATIVE | TF_CONVERSIONMODE_SYMBOL : 0;
 		convMode->SetValue(m_dwClientId, &valConvMode);
 	}
-
-
 }
 
 LRESULT WINAPI TsfInputMethodStore::ImmSubClassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 	UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-	//switch (uMsg)
-	//{
-	//default:
-	//	break;
-	//}
+	switch (uMsg)
+	{
+	case WM_KEYDOWN:
+
+		break;
+	case WM_SETFOCUS: {
+		TsfInputMethodStore::get().FocusDocument();
+		break;
+	}
+	default:
+		break;
+	}
 	return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
 
@@ -259,6 +254,7 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::BeginUIElement(
 	/* [in] */ DWORD dwUIElementId,
 	/* [out][in] */ BOOL* pbShow) {
 	TRACE_FUNC();
+	LOG_DEBUG("ITfUIElementSink");
 	m_ulCandidatePageMaxSize = 0;
 	if (pbShow)
 	{
@@ -281,7 +277,7 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::BeginUIElement(
 HRESULT STDMETHODCALLTYPE TsfInputMethodStore::UpdateUIElement(
 	/* [in] */ DWORD dwUIElementId) {
 	TRACE_FUNC();
-	LOG_DEBUG("UpdateUIElement");
+	LOG_DEBUG("ITfUIElementSink");
 	//if (!m_bIsFocused) {
 	//	return S_OK;
 	//}
@@ -344,6 +340,7 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::UpdateUIElement(
 HRESULT STDMETHODCALLTYPE TsfInputMethodStore::EndUIElement(
 	/* [in] */ DWORD dwUIElementId) {
 	TRACE_FUNC();
+	LOG_DEBUG("ITfUIElementSink");
 
 	ComPtr<ITfUIElement> uielement;
 	if (SUCCEEDED(m_itfUIElementMgr->GetUIElement(dwUIElementId, &uielement)))
@@ -366,97 +363,97 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::EndUIElement(
 
 HRESULT TsfInputMethodStore::OnEndEdit(ITfContext* pic, TfEditCookie ecReadOnly, ITfEditRecord* pEditRecord) {
 	TRACE_FUNC();
+	LOG_DEBUG("ITfTextEditSink");
+	//HRESULT hr = S_OK;
+	//ULONG readSize = 0;
 
-	HRESULT hr = S_OK;
-	ULONG readSize = 0;
+	//if (m_itfEndRange) {
+	//	m_strReading.clear();
+	//	m_strReading.resize(1024);
+	//	m_itfEndRange->GetText(ecReadOnly, TF_TF_IGNOREEND, m_strReading.data(), (ULONG)m_strReading.length(), &readSize);
+	//	m_strReading.resize(readSize);
 
-	if (m_itfEndRange) {
-		m_strReading.clear();
-		m_strReading.resize(1024);
-		m_itfEndRange->GetText(ecReadOnly, TF_TF_IGNOREEND, m_strReading.data(), (ULONG)m_strReading.length(), &readSize);
-		m_strReading.resize(readSize);
+	//	m_itfEndRange.Reset();
 
-		m_itfEndRange.Reset();
+	//	ComPtr<ITfInsertAtSelection > acp;
+	//	hr = pic->QueryInterface(IID_ITfInsertAtSelection, &acp);
+	//	ComPtr<ITfRange> tmpEndRange;
+	//	hr = acp->InsertTextAtSelection(ecReadOnly, TF_IAS_QUERYONLY, m_strReading.c_str(), (ULONG)m_strReading.length(), &tmpEndRange);
 
-		ComPtr<ITfInsertAtSelection > acp;
-		hr = pic->QueryInterface(IID_ITfInsertAtSelection, &acp);
-		ComPtr<ITfRange> tmpEndRange;
-		hr = acp->InsertTextAtSelection(ecReadOnly, TF_IAS_QUERYONLY, m_strReading.c_str(), (ULONG)m_strReading.length(), &tmpEndRange);
+	//	for (const auto& c : m_strReading)
+	//	{
+	//		PostMessage(m_hWnd, WM_CHAR, c, NULL);
+	//	}
+	//	return hr;
+	//}
+	//// get pointer to ITfContextComposition interface
+	//ComPtr<ITfContextComposition> pContextComposition;
+	//if (FAILED(pic->QueryInterface(IID_ITfContextComposition, &pContextComposition))) return S_OK;
 
-		for (const auto& c : m_strReading)
-		{
-			PostMessage(m_hWnd, WM_CHAR, c, NULL);
-		}
-		return hr;
-	}
-	// get pointer to ITfContextComposition interface
-	ComPtr<ITfContextComposition> pContextComposition;
-	if (FAILED(pic->QueryInterface(IID_ITfContextComposition, &pContextComposition))) return S_OK;
+	//// creates enumerator object for all compositions in context
+	//ComPtr<IEnumITfCompositionView> pEnumComposition;
+	//if (FAILED(pContextComposition->EnumCompositions(&pEnumComposition))) {
+	//	return S_OK;
+	//};
 
-	// creates enumerator object for all compositions in context
-	ComPtr<IEnumITfCompositionView> pEnumComposition;
-	if (FAILED(pContextComposition->EnumCompositions(&pEnumComposition))) {
-		return S_OK;
-	};
+	//// obtain pointer to the composition view from the current 
+	//// position to the end
 
-	// obtain pointer to the composition view from the current 
-	// position to the end
+	//ULONG compositionViewCount = 0;
+	//ComPtr<ITfCompositionView> pCompositionView;
+	//ComPtr<ITfRange> pvRangeColone;
+	//while (pEnumComposition->Next(1, &pCompositionView, NULL) == S_OK) {
+	//	compositionViewCount++;
 
-	ULONG compositionViewCount = 0;
-	ComPtr<ITfCompositionView> pCompositionView;
-	ComPtr<ITfRange> pvRangeColone;
-	while (pEnumComposition->Next(1, &pCompositionView, NULL) == S_OK) {
-		compositionViewCount++;
+	//	ComPtr<ITfRange> pvRange;
 
-		ComPtr<ITfRange> pvRange;
+	//	// get range object and receive the text into buffer (wStr)
+	//	if (FAILED(pCompositionView->GetRange(&pvRange))) {
+	//		continue;
+	//	}
+	//	if (!pvRangeColone)
+	//	{
+	//		hr = pvRange->Clone(&pvRangeColone);
+	//	}
+	//	else
+	//	{
+	//		hr = pvRangeColone->ShiftEndToRange(ecReadOnly, pvRange.Get(), TF_ANCHOR_END);
+	//	}
 
-		// get range object and receive the text into buffer (wStr)
-		if (FAILED(pCompositionView->GetRange(&pvRange))) {
-			continue;
-		}
-		if (!pvRangeColone)
-		{
-			hr = pvRange->Clone(&pvRangeColone);
-		}
-		else
-		{
-			hr = pvRangeColone->ShiftEndToRange(ecReadOnly, pvRange.Get(), TF_ANCHOR_END);
-		}
-
-	}
-	if (pvRangeColone) {
-		m_strReading.clear();
-		m_strReading.resize(1024);
-		pvRangeColone->GetText(ecReadOnly, TF_TF_IGNOREEND, m_strReading.data(), (ULONG)m_strReading.length(), &readSize);
-		m_strReading.resize(readSize);
-	}
+	//}
+	//if (pvRangeColone) {
+	//	m_strReading.clear();
+	//	m_strReading.resize(1024);
+	//	pvRangeColone->GetText(ecReadOnly, TF_TF_IGNOREEND, m_strReading.data(), (ULONG)m_strReading.length(), &readSize);
+	//	m_strReading.resize(readSize);
+	//}
 
 
-	if (compositionViewCount == 0) {
-		do
-		{
-			ComPtr<ITfInsertAtSelection > acp;
-			hr = pic->QueryInterface(IID_ITfInsertAtSelection, &acp);
-			// acp->InsertTextAtSelection()
+	//if (compositionViewCount == 0) {
+	//	do
+	//	{
+	//		ComPtr<ITfInsertAtSelection > acp;
+	//		hr = pic->QueryInterface(IID_ITfInsertAtSelection, &acp);
+	//		// acp->InsertTextAtSelection()
 
-			ULONG writeSize = 0;
-			ComPtr<ITfRange> pvRange;
-			pic->GetStart(ecReadOnly, &pvRange);
-			m_strReading.clear();
-			m_strReading.resize(1024);
-			pvRange->GetText(ecReadOnly, TF_TF_IGNOREEND, m_strReading.data(), (ULONG)m_strReading.length(), &writeSize);
-			m_strReading.resize(writeSize);
-			LONG shiftLen = 0;
-			hr = pvRange->ShiftStart(ecReadOnly, writeSize, &shiftLen, nullptr);
+	//		ULONG writeSize = 0;
+	//		ComPtr<ITfRange> pvRange;
+	//		pic->GetStart(ecReadOnly, &pvRange);
+	//		m_strReading.clear();
+	//		m_strReading.resize(1024);
+	//		pvRange->GetText(ecReadOnly, TF_TF_IGNOREEND, m_strReading.data(), (ULONG)m_strReading.length(), &writeSize);
+	//		m_strReading.resize(writeSize);
+	//		LONG shiftLen = 0;
+	//		hr = pvRange->ShiftStart(ecReadOnly, writeSize, &shiftLen, nullptr);
 
-		} while (false);
+	//	} while (false);
 
-		/*for (const auto& c : m_strReading)
-		{
-			PostMessage(m_hWnd, WM_CHAR, c, NULL);
-		}*/
-		m_strReading.clear();
-	}
+	//	/*for (const auto& c : m_strReading)
+	//	{
+	//		PostMessage(m_hWnd, WM_CHAR, c, NULL);
+	//	}*/
+	//	m_strReading.clear();
+	//}
 	return S_OK;
 }
 
@@ -464,6 +461,7 @@ HRESULT TsfInputMethodStore::OnEndEdit(ITfContext* pic, TfEditCookie ecReadOnly,
 HRESULT TsfInputMethodStore::OnStartComposition(ITfCompositionView* pComposition, BOOL* pfOk)
 {
 	TRACE_FUNC();
+	LOG_DEBUG("ITfContextOwnerCompositionSink");
 	*pfOk = TRUE;
 	return S_OK;
 }
@@ -471,6 +469,7 @@ HRESULT TsfInputMethodStore::OnStartComposition(ITfCompositionView* pComposition
 HRESULT TsfInputMethodStore::OnUpdateComposition(ITfCompositionView* pComposition, ITfRange* pRangeNew)
 {
 	TRACE_FUNC();
+	LOG_DEBUG("ITfContextOwnerCompositionSink");
 	//ComPtr<ITfRange> range;
 	//ITfRange* pRange = pRangeNew;
 	//if (pRangeNew == nullptr)
@@ -495,7 +494,7 @@ HRESULT TsfInputMethodStore::OnEndComposition(ITfCompositionView* pComposition)
 	TRACE_FUNC();
 	// pComposition->GetRange(&m_imeEndRange);
 	// logger::get().log({}, spdlog::level::level_enum::debug, L"***** OnEndComposition: {}", string_buffer_.c_str());
-	LOG_DEBUG("***** OnEndComposition: {}", logger::wstr_to_utf8(string_buffer_));
+	LOG_DEBUG("***** ITfContextOwnerCompositionSink: {}", logger::wstr_to_utf8(string_buffer_));
 	//string_buffer_.clear();
 	for (const auto& wc : string_buffer_)
 	{
@@ -508,6 +507,15 @@ HRESULT TsfInputMethodStore::OnEndComposition(ITfCompositionView* pComposition)
 	committed_size_ = 0;
 	selection_.acpStart = 0;
 	selection_.acpEnd = 0;
+	
+	m_ulCandidateCount = 0;
+	m_ulCandidatePageCount = 0;
+	m_ulCandidatePageIndex = 0;
+	m_ulCandidatePageStart = 0;
+	m_ulCandidatePageSize = 0;
+	m_ulCandidatePageMaxSize = 0;
+	m_ulCandidateSelect = 0;
+
 	return S_OK;
 }
 
@@ -525,10 +533,27 @@ bool TsfInputMethodStore::OnDestroy() {
 	return true;
 }
 
+void TsfInputMethodStore::FocusDocument() {
+	if (m_itfThreadMgr == nullptr || m_itfDocumentMgr == nullptr) {
+		LOG_WARN("threadmgr is null or docment mgr is null");
+		return;
+	}
 
+	ComPtr<ITfDocumentMgr> imeDocumentMgr;
+	if (FAILED(m_itfThreadMgr->GetFocus(&imeDocumentMgr))) return;
+	if (imeDocumentMgr != m_itfDocumentMgr)
+	{
+		LOG_DEBUG("doc focused, {}", (std::size_t(m_itfDocumentMgr.Get())));
+		m_itfThreadMgr->SetFocus(m_itfDocumentMgr.Get());
+	}
+}
 
-void TsfInputMethodStore::SetFocus(bool isFocus) {
-	if (isFocus == m_bIsFocused) return;
+void TsfInputMethodStore::Clear() {
+
+}
+
+void TsfInputMethodStore::SetFocus(bool isFocus, const std::wstring& content, std::size_t insert_pos) {
+	// if (isFocus == m_bIsFocused) return;
 	m_bIsFocused = isFocus;
 
 	// ImmAssociateContext(m_hWnd, m_bIsFocused ? m_himcOrg : nullptr);
@@ -536,19 +561,69 @@ void TsfInputMethodStore::SetFocus(bool isFocus) {
 	TRACE_FUNC_EXT("@@@@@@@@@is focus? {}", isFocus);
 	LOG_DEBUG("@@@@@@@@@is focus? {}", isFocus);
 
-	if (m_itfThreadMgr == nullptr || m_itfDocumentMgr == nullptr)
-		return;
+	FocusDocument();
 
-	ComPtr<ITfDocumentMgr> imeDocumentMgr;
-	if (FAILED(m_itfThreadMgr->GetFocus(&imeDocumentMgr))) return;
-	if (imeDocumentMgr != m_itfDocumentMgr) {
-		m_itfThreadMgr->SetFocus(m_itfDocumentMgr.Get());
+	::SetFocus(isFocus ? m_hWnd : nullptr);
+
+	if (isFocus == false) {
+		string_buffer_.clear();
+		
 	}
 
-	//if (m_itfTextStoreACPSink_) {
-	//	m_itfTextStoreACPSink_->OnStatusChange(isFocus ? TS_SD_LOADING : TS_SD_READONLY);
-	//	m_itfTextStoreACPSink_->OnLayoutChange(isFocus ? TsLayoutCode::TS_LC_CREATE : TsLayoutCode::TS_LC_DESTROY, kViewCookie);
-	//}
+	ComPtr<ITfSource> source;
+	if (FAILED(m_itfUIElementMgr->QueryInterface(IID_ITfSource, &source))) {
+		LOG_WARN("unsink query tfsource failed");
+		return;
+	}
+	if (!isFocus) {
+		// m_himcOrg = ImmAssociateContext(m_hWnd, NULL);
+		if (FAILED(source->UnadviseSink(m_dwUIElementSinkCookie))) {
+			LOG_WARN("unsink UIElementSink failed, {}", m_dwUIElementSinkCookie);
+		} else {
+			LOG_INFO("unsink UIElementSink suc, {}", m_dwUIElementSinkCookie);
+		}
+		if (FAILED(source->UnadviseSink(m_dwThreadMgrEventSinkCookie))) {
+			LOG_WARN("unsink ThreadMgrEventSink failed, {}", m_dwThreadMgrEventSinkCookie);
+		}
+		else {
+			LOG_INFO("unsink ThreadMgrEventSink suc, {}", m_dwThreadMgrEventSinkCookie);
+		}
+		m_itfDocumentMgr->GetTop(&m_itfEditSinkContext);
+		if (m_dwTextEditSinkCookie != TF_INVALID_COOKIE && m_itfEditSinkContext != nullptr) {
+			ComPtr<ITfSource> source;
+			m_itfEditSinkContext.As(&source);
+			if (source) {
+				if (FAILED(source->UnadviseSink(m_dwTextEditSinkCookie))) {
+					LOG_WARN("unsink EditSink failed, {}", m_dwTextEditSinkCookie);
+				}
+				else {
+					LOG_INFO("unsink EditSink suc, {}", m_dwTextEditSinkCookie);
+					m_dwTextEditSinkCookie = TF_INVALID_COOKIE;
+				}
+			}
+		}
+	}
+	else {
+		// ImmAssociateContext(m_hWnd, m_himcOrg);
+		source->UnadviseSink(m_dwUIElementSinkCookie);
+		source->AdviseSink(IID_ITfUIElementSink, (ITfUIElementSink*)this, &m_dwUIElementSinkCookie);
+		LOG_INFO("sink ITfUIElementSink suc, {}", m_dwUIElementSinkCookie);
+		source->UnadviseSink(m_dwThreadMgrEventSinkCookie);
+		source->AdviseSink(IID_ITfThreadMgrEventSink, (ITfThreadMgrEventSink*)this, &m_dwThreadMgrEventSinkCookie);
+		LOG_INFO("sink ITfThreadMgrEventSink suc, {}", m_dwThreadMgrEventSinkCookie);
+		//OnSetFocus(m_itfDocumentMgr.Get(), nullptr);
+		//m_itfThreadMgr->SetFocus(m_itfDocumentMgr.Get());
+		m_itfDocumentMgr->GetTop(&m_itfEditSinkContext);
+		if (m_itfEditSinkContext != nullptr) {
+			ComPtr<ITfSource> source;
+			m_itfEditSinkContext.As(&source);
+			if (source) {
+				source->UnadviseSink(m_dwTextEditSinkCookie);
+				source->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink*)this, &m_dwTextEditSinkCookie);
+				LOG_INFO("sink ITfTextEditSink suc, {}", m_dwTextEditSinkCookie);
+			}
+		}
+	}
 }
 
 
@@ -565,9 +640,15 @@ HRESULT TsfInputMethodStore::OnUninitDocumentMgr(ITfDocumentMgr* pdim) {
 
 HRESULT TsfInputMethodStore::OnSetFocus(ITfDocumentMgr* pdimFocus, ITfDocumentMgr* pdimPrevFocus) {
 	TRACE_FUNC();
-	if (m_dwTextEditSinkCookie != -1) {
+	if (m_dwTextEditSinkCookie != TF_INVALID_COOKIE) {
+		ComPtr<ITfSource> source;
+		m_itfEditSinkContext.As(&source);
+		if (source) {
+			source->UnadviseSink(m_dwTextEditSinkCookie);
+			LOG_INFO("unsink ITfTextEditSink, {}", m_dwTextEditSinkCookie);
+		}
+		m_dwTextEditSinkCookie = TF_INVALID_COOKIE;
 		m_itfEditSinkContext.Reset();
-		m_dwTextEditSinkCookie = -1;
 	}
 	if (pdimFocus == nullptr) {
 		return 0;
@@ -578,11 +659,18 @@ HRESULT TsfInputMethodStore::OnSetFocus(ITfDocumentMgr* pdimFocus, ITfDocumentMg
 		ComPtr<ITfSource> source;
 		m_itfEditSinkContext.As(&source);
 		if (source) {
+			if (m_dwTextEditSinkCookie != TF_INVALID_COOKIE) {
+				LOG_INFO("unsink ITfTextEditSink, {}", m_dwTextEditSinkCookie);
+				source->UnadviseSink(m_dwTextEditSinkCookie);
+			}
+
 			source->AdviseSink(IID_ITfTextEditSink, (ITfTextEditSink*)this, &m_dwTextEditSinkCookie);
+			LOG_INFO("sink ITfTextEditSink, {}", m_dwTextEditSinkCookie);
 		}
 	}
-	return 0;
+	return S_OK;
 }
+
 
 HRESULT TsfInputMethodStore::OnPushContext(ITfContext* pic) {
 	TRACE_FUNC();

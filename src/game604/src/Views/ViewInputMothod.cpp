@@ -39,7 +39,7 @@ void ViewInputMothod::OnRender() {
 	{
 		auto candidate = std::to_wstring(i + 1) + L" " + tsf.candidates()[i];
 
-		auto pageindex = tsf.candidate_select_index() % tsf.candidate_page_max_size();
+		auto pageindex = tsf.candidate_select_index() % std::max((std::size_t)tsf.candidate_page_max_size(), tsf.candidates().size());
 		if (i == pageindex) {
 			candidate = (L"->") + candidate;
 		}

@@ -52,7 +52,7 @@ HWND Win32Application::InitWindow(HINSTANCE hInstance, int cmdShow, Game &game)
 	auto [w, h] = game.GetWindowSize();
 	RECT rc = { 0, 0, LONG(w), LONG(h) };
 	AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, false);
-
+    
 	HWND hWnd = CreateWindowExW(0, game.className().data(), game.title().data(), WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, hInstance,
 		&game);

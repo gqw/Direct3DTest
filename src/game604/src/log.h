@@ -211,6 +211,7 @@ private:
 
 #ifdef PRINT_LOG_TRACE
 #define  TRACE_FUNC()  FunctionTracer __log_function_tracer(__FILENAME__, __LINE__, __FUNCTION__, ""); 
+#define  DEBUG_FUNC()  FunctionTracer __log_function_tracer(__FILENAME__, __LINE__, __FUNCTION__, ""); 
 #define  TRACE_FUNC_EXT(msg, ...)  FunctionTracer __log_function_tracer(__FILENAME__, __LINE__, __FUNCTION__, msg, __VA_ARGS__); 
 #else 
 #define TRACE_FUNC()
