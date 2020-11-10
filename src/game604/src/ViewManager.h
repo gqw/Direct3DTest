@@ -9,7 +9,7 @@ public:
 
     bool RegistView(const std::shared_ptr<ViewInterface>& view);
 
-    bool OnInit();
+    bool OnInit(HWND hwnd);
     void OnRender();
     void OnDestory();
 

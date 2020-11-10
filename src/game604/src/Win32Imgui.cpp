@@ -9,7 +9,6 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 bool Win32Imgui::OnInit(HWND hwnd, Microsoft::WRL::ComPtr<ID3D11Device> d3dDevice, Microsoft::WRL::ComPtr<ID3D11DeviceContext> d3dDeviceContext) {
 	m_d3dDevice = d3dDevice;
 	m_d3dDeviceContext = d3dDeviceContext;
-	TsfInputMethodStore::get().OnInit(hwnd);
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -17,7 +16,7 @@ bool Win32Imgui::OnInit(HWND hwnd, Microsoft::WRL::ComPtr<ID3D11Device> d3dDevic
 	ImGui_ImplWin32_Init(hwnd);
 	ImGui_ImplDX11_Init(m_d3dDevice.Get(), m_d3dDeviceContext.Get());
 	ImGui::GetIO().Fonts->AddFontFromFileTTF(R"(c:\Windows\Fonts\simhei.ttf)", 13.0f, NULL, ImGui::GetIO().Fonts->GetGlyphRangesChineseFull());
-	ViewManager::Inst().OnInit();
+	ViewManager::Inst().OnInit(hwnd);
 	// ImGui::GetIO().ImeWindowHandle = nullptr;
 	ImGui::SetWindowFocus();
 	return true;

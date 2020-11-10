@@ -11,11 +11,12 @@ using Microsoft::WRL::ComPtr;
 // We support only one view.
 const TsViewCookie kViewCookie = 1;
 
-bool TsfInputMethodStore::OnInit(HWND hWnd) {
+bool TsfInputMethodStore::OnInit(HWND hWnd, std::wstring_view buffer) {
 	TRACE_FUNC();
 	ASSERT_THROW(IsWindow(hWnd), "imm init failed.");
 	m_hWnd = hWnd;
 	m_dwRefernce = 1;
+	string_buffer_ = buffer;
 
 	if (FAILED(CoInitialize(NULL))) return false;
 	ComPtr<ITfThreadMgr> threadmgr;
@@ -495,27 +496,12 @@ HRESULT TsfInputMethodStore::OnEndComposition(ITfCompositionView* pComposition)
 	// pComposition->GetRange(&m_imeEndRange);
 	// logger::get().log({}, spdlog::level::level_enum::debug, L"***** OnEndComposition: {}", string_buffer_.c_str());
 	LOG_DEBUG("***** ITfContextOwnerCompositionSink: {}", logger::wstr_to_utf8(string_buffer_));
-	//string_buffer_.clear();
-	for (const auto& wc : string_buffer_)
-	{
-		PostMessageW(m_hWnd, WM_CHAR, wc, 0);
-	}
-	string_buffer_.clear();
-	edit_flag_ = 0;
-	current_lock_type_ = 0;
-	lock_queue_.clear();
-	committed_size_ = 0;
-	selection_.acpStart = 0;
-	selection_.acpEnd = 0;
-	
-	m_ulCandidateCount = 0;
-	m_ulCandidatePageCount = 0;
-	m_ulCandidatePageIndex = 0;
-	m_ulCandidatePageStart = 0;
-	m_ulCandidatePageSize = 0;
-	m_ulCandidatePageMaxSize = 0;
-	m_ulCandidateSelect = 0;
-
+	//
+	//for (const auto& wc : string_buffer_)
+	//{
+	//	PostMessageW(m_hWnd, WM_CHAR, wc, 0);
+	//}
+	// Clear();
 	return S_OK;
 }
 
@@ -549,10 +535,37 @@ void TsfInputMethodStore::FocusDocument() {
 }
 
 void TsfInputMethodStore::Clear() {
+	// string_buffer_.clear();
+	edit_flag_ = 0;
+	current_lock_type_ = 0;
+	lock_queue_.clear();
+	committed_size_ = 0;
+	selection_.acpStart = 0;
+	selection_.acpEnd = 0;
+
+	m_ulCandidateCount = 0;
+	m_ulCandidatePageCount = 0;
+	m_ulCandidatePageIndex = 0;
+	m_ulCandidatePageStart = 0;
+	m_ulCandidatePageSize = 0;
+	m_ulCandidatePageMaxSize = 0;
+	m_ulCandidateSelect = 0;
 
 }
 
-void TsfInputMethodStore::SetFocus(bool isFocus, const std::wstring& content, std::size_t insert_pos) {
+void TsfInputMethodStore::SetBufferLength(std::size_t buffer_len) {
+	LOG_DEBUG("buffer len: {}", buffer_len);
+	string_buffer_length_ = buffer_len;
+	is_string_buffer_update_ = true;
+}
+
+void TsfInputMethodStore::SetCorsorPos(std::size_t insert_pos) {
+	insert_pos = std::min(insert_pos, string_buffer_length_);
+	selection_.acpStart = insert_pos;
+	selection_.acpEnd = insert_pos;
+}
+
+void TsfInputMethodStore::SetFocus(bool isFocus) {
 	// if (isFocus == m_bIsFocused) return;
 	m_bIsFocused = isFocus;
 
@@ -565,10 +578,7 @@ void TsfInputMethodStore::SetFocus(bool isFocus, const std::wstring& content, st
 
 	::SetFocus(isFocus ? m_hWnd : nullptr);
 
-	if (isFocus == false) {
-		string_buffer_.clear();
-		
-	}
+	// if (!isFocus) Clear();
 
 	ComPtr<ITfSource> source;
 	if (FAILED(m_itfUIElementMgr->QueryInterface(IID_ITfSource, &source))) {
@@ -762,9 +772,9 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::RequestLock(
 	// If the text store is edited in OnLockGranted(), we may need to call
 	// TextInputClient::InsertText() or TextInputClient::SetCompositionText().
 	//const size_t new_committed_size = committed_size_;
-	//const std::wstring& new_committed_string =
+	//std::wstring new_committed_string =
 	//	string_buffer_.substr(last_committed_size,
-	//		new_committed_size - last_committed_size);
+	//		new_committed_size - last_committed_size).data();
 	//const std::wstring& composition_string =
 	//	string_buffer_.substr(new_committed_size);
 	//// If there is new committed string, calls TextInputClient::InsertText().
@@ -843,7 +853,7 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::QueryInsert(
 		return E_INVALIDARG;
 	if (!((static_cast<LONG>(committed_size_) <= acpTestStart) &&
 		(acpTestStart <= acpTestEnd) &&
-		(acpTestEnd <= static_cast<LONG>(string_buffer_.size())))) {
+		(acpTestEnd <= static_cast<LONG>(string_buffer_length_)))) {
 		return E_INVALIDARG;
 	}
 	*pacpResultStart = acpTestStart;
@@ -886,7 +896,7 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::SetSelection(
 		const LONG end_pos = pSelection[0].acpEnd;
 		if (!((static_cast<LONG>(committed_size_) <= start_pos) &&
 			(start_pos <= end_pos) &&
-			(end_pos <= static_cast<LONG>(string_buffer_.size())))) {
+			(end_pos <= static_cast<LONG>(string_buffer_length_)))) {
 			return TF_E_INVALIDPOS;
 		}
 		selection_.acpStart = start_pos;
@@ -917,7 +927,7 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::GetText(
 		return E_INVALIDARG;
 	if (!HasReadLock())
 		return TF_E_NOLOCK;
-	const LONG string_buffer_size = (LONG)string_buffer_.size();
+	const LONG string_buffer_size = (LONG)string_buffer_length_;
 	if (acpEnd == -1)
 		acpEnd = string_buffer_size;
 	if (!((0 <= acpStart) &&
@@ -964,9 +974,11 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::SetText(
 		return TS_E_NOLOCK;
 	if (!((static_cast<LONG>(committed_size_) <= acpStart) &&
 		(acpStart <= acpEnd) &&
-		(acpEnd <= static_cast<LONG>(string_buffer_.size())))) {
+		(acpEnd <= static_cast<LONG>(string_buffer_length_)))) {
 		return TS_E_INVALIDPOS;
 	}
+
+	LOG_DEBUG("start: {}, end: {}, cch_len:  {}", acpStart, acpEnd, cch);
 	HRESULT ret;
 	selection_.acpStart = acpStart;
 	selection_.acpEnd = acpEnd;
@@ -1065,9 +1077,18 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::InsertTextAtSelection(
 	if (!pchText)
 		return E_INVALIDARG;
 	// DCHECK_LE(start_pos, end_pos);
-	string_buffer_ = string_buffer_.substr(0, start_pos) +
-		std::wstring(pchText, pchText + cch) +
-		string_buffer_.substr(end_pos);
+	string_buffer_length_ = start_pos;
+	std::wstring_view insert(pchText, cch);
+	std::wstring suffix = string_buffer_.substr(end_pos).data();
+	insert.copy((wchar_t*)string_buffer_.data() + string_buffer_length_, cch);
+	string_buffer_length_ += cch;
+	suffix.copy((wchar_t*)string_buffer_.data() + string_buffer_length_, suffix.length());
+	string_buffer_length_ += suffix.length();
+	*((wchar_t*)string_buffer_.data() + string_buffer_length_) = L'\0';
+	is_string_buffer_update_ = true;
+	//string_buffer_.substr(0, start_pos) +
+	//	std::wstring(pchText, pchText + cch) +
+	//	string_buffer_.substr(end_pos);
 	if (pacpStart)
 		*pacpStart = start_pos;
 	if (pacpEnd)
@@ -1183,7 +1204,7 @@ HRESULT STDMETHODCALLTYPE TsfInputMethodStore::GetEndACP(
 		return E_INVALIDARG;
 	if (!HasReadLock())
 		return TS_E_NOLOCK;
-	*pacp = (LONG)string_buffer_.size();
+	*pacp = (LONG)string_buffer_length_;
 	return S_OK;
 }
 

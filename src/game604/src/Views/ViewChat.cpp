@@ -6,6 +6,82 @@ bool ViewChat::OnInit() {
 	return true;
 }
 
+int GetUtf8Length(char const* str, int end) {
+	int len = 0, index = 0;
+	while (*str != '\0' && index < end) {
+		len++;
+		if ((*str & 0x80) == 0) {
+			str++;
+			index++;
+		}
+		else if ((*str & 0xF0) == 0xF0) {
+			str += 4;
+			index += 4;
+		}
+		else if ((*str & 0xE0) == 0xE0) {
+			str += 3;
+			index += 3;
+		}
+		else if ((*str & 0xC0) == 0xC0) {
+			str += 2;
+			index += 2;
+		}
+	}
+	return len;
+}
+
+int WStringLenToUtf8Length(char const* str, int wend) {
+	int len = 0, index = 0;
+	while (index < wend) {
+		if (*str == '\0') break;
+
+		index++;
+		if ((*str & 0x80) == 0) {
+			str++;
+			len += 1;
+		}
+		else if ((*str & 0xF0) == 0xF0) {
+			str += 4;
+			len += 4;
+		}
+		else if ((*str & 0xE0) == 0xE0) {
+			str += 3;
+			len += 3;
+		}
+		else if ((*str & 0xC0) == 0xC0) {
+			str += 2;
+			len += 2;
+		}
+	}
+	return len;
+}
+
+int ViewChat::InputCallback(ImGuiInputTextCallbackData* data) {
+	ViewChat* pViewChat = ((ViewChat*)(data->UserData));
+	pViewChat->m_contentData = *data;
+	if (!TsfInputMethodStore::get().is_reading_upate()) {
+		data->BufDirty = false;
+		return 0;
+	}
+
+	std::string s(wstring_to_utf8(std::wstring(pViewChat->m_strReadingBuffer.c_str())));
+	// if (!s.empty()) 
+	{
+		s.copy(data->Buf, std::size_t(data->BufSize) - 1);
+		data->Buf[s.length()] = '\0';
+		data->BufTextLen = s.length();
+		data->BufDirty = true;
+		data->CursorPos = WStringLenToUtf8Length(s.c_str(), TsfInputMethodStore::get().candidate_select_end());
+
+		
+		LOG_DEBUG("callback: {}, textlen: {}, cursor: {}", data->Buf, data->BufTextLen, data->CursorPos);
+	}
+	// LOG_DEBUG("data: {}, {}, {} pos: {}", data->Buf, data->SelectionEnd, data->SelectionEnd, data->CursorPos);
+	return 0;
+}
+
+
+
 void ViewChat::OnRender() {
 	auto windowSize = ImGui::GetWindowSize();
 	static float windowHight = 230.0f;
@@ -46,8 +122,13 @@ void ViewChat::OnRender() {
 		}
 		std::list<std::string>* plist = &m_worldHistories;
 		ImGui::PushItemWidth(windowSize.x - 60);
-		if (ImGui::InputText("##ChatInput", m_strChatContent.data(), m_strChatContent.length())) {
+
+		
+		bool inputText = false;
+		if (ImGui::InputText("##ChatInput", m_strChatContent.data(), m_strChatContent.length(), ImGuiInputTextFlags_CallbackAlways, &InputCallback, this)) {
 			ImGui::SetItemDefaultFocus();
+			inputText = true;
+			LOG_DEBUG("after input, {}", m_strChatContent.c_str());
 		}
 		bool isActivie = false;
 		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow) && ImGui::IsItemActive()) {
@@ -56,9 +137,31 @@ void ViewChat::OnRender() {
 		else {
 			isActivie = false;
 		}
+
+		std::string_view content(m_contentData.Buf, m_contentData.BufTextLen);
+		if (m_iLastContentPos != m_contentData.CursorPos || content != m_strLastContent) 
+		{
+			m_strLastContent = content;
+			m_iLastContentPos = m_contentData.CursorPos;
+			if (inputText == true) {
+				// 内容改变了，有可能是删除操作
+				std::wstring newcontent = utf8_to_wstring(content.data());
+				if (newcontent != m_strReadingBuffer.c_str()) 
+				{
+					memset((void*)m_strReadingBuffer.c_str(), 0, m_strReadingBuffer.size());
+					newcontent.copy(m_strReadingBuffer.data(), m_strReadingBuffer.length(), 0);
+					TsfInputMethodStore::get().SetBufferLength(newcontent.length());
+					LOG_DEBUG("content: {}, new: {}， buflen: {}", content, wstring_to_utf8(newcontent), m_contentData.BufTextLen);
+				}
+			}
+			
+			
+			TsfInputMethodStore::get().SetCorsorPos(GetUtf8Length(content.data(), m_iLastContentPos));
+		}
 		if (isActivie != m_lastIsFocus) {
 			TsfInputMethodStore::get().SetFocus(isActivie);
 		}
+		
 		m_lastIsFocus = isActivie;
 
 		ImGui::PopItemWidth();

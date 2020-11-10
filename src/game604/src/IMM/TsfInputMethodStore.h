@@ -18,14 +18,22 @@ public:
 		return tsf;
 	}
 
-	bool OnInit(HWND hWnd);
+	bool OnInit(HWND hWnd, std::wstring_view buffer);
 	bool OnDestroy();
-	void SetFocus(bool isFocus, const std::wstring& content, std::size_t insert_pos);
+	void SetFocus(bool isFocus);
+	void SetBufferLength(std::size_t buffer_len);
+	void SetCorsorPos(std::size_t insert_pos);
 	void SwitchImeConvert();
 
 	HWND window_handle() { return m_hWnd; }
 	std::vector<std::wstring> candidates() { return m_vCandidates; }
-	const std::wstring& reading() { return string_buffer_; }
+	const wchar_t* reading() { return string_buffer_.data(); }
+	std::size_t reading_len() { return string_buffer_length_; }
+	bool is_reading_upate() { 
+		bool is_update = is_string_buffer_update_; 
+		is_string_buffer_update_ = false; 
+		return is_update; 
+	}
 	// const std::wstring& select() { return m_strSelectedStr; }
 
 	UINT candidate_count() { return m_ulCandidateCount; }
@@ -184,7 +192,9 @@ private:
 	//  Example: "aoi" is committed, and "umi" is under composition.
 	//    |string_buffer_|: "aoiumi"
 	//    |committed_size_|: 3
-	std::wstring string_buffer_;
+	std::wstring_view string_buffer_;
+	bool is_string_buffer_update_ = false;
+	std::size_t string_buffer_length_ = 0;
 	size_t committed_size_ = 0;
 	//  |selection_start_| and |selection_end_| indicates the selection range.
 	//  Example: "iue" is selected
@@ -192,6 +202,7 @@ private:
 	//    |selection_.start()|: 1
 	//    |selection_.end()|: 4
 	TS_SELECTION_ACP selection_{};
+
 	bool m_bIsFocused = false;
 	bool m_bImeEnableNative = true; // true， 中文； false, 英文
 	HIMC m_himcOrg = nullptr;

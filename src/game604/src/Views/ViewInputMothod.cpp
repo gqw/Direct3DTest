@@ -3,6 +3,7 @@
 
 #include "../Game.h"
 #include "../IMM/TsfInputMethodStore.h"
+#include "ViewChat.h"
 
 bool ViewInputMothod::OnInit() {
     return true;
@@ -15,10 +16,9 @@ void ViewInputMothod::OnRender() {
 
 	auto& tsf = TsfInputMethodStore::get();
 	
-
-	std::wstring reading = tsf.reading();
-
-
+	auto pChat = m_pChat.lock();
+	
+	std::wstring reading = pChat ? pChat->reading_buffer().c_str() : L"";
 	do
 	{
 		if (reading.empty()) {

@@ -4,6 +4,8 @@
 #include "Views/ViewSetting.h"
 #include "Views/ViewInputMothod.h"
 
+#include "IMM/TsfInputMethodStore.h"
+
 bool ViewManager::RegistView(const std::shared_ptr<ViewInterface>& view) {
     ASSERT_THROW(view, "Regist view cannot nullptr.");
     auto iter = m_viewMap.find(view->Name());
@@ -15,10 +17,15 @@ bool ViewManager::RegistView(const std::shared_ptr<ViewInterface>& view) {
     return true;
 }
 
-bool ViewManager::OnInit() {
+bool ViewManager::OnInit(HWND hwnd) {
     RegistView(std::make_shared<ViewSetting>("Hello"));
-    RegistView(std::make_shared<ViewInputMothod>("InputMothod"));
-    RegistView(std::make_shared<ViewChat>("Chat"));
+    auto chat = std::make_shared<ViewChat>("Chat");
+
+    RegistView(std::make_shared<ViewInputMothod>("InputMothod", chat));
+    
+    RegistView(chat);
+
+    TsfInputMethodStore::get().OnInit(hwnd, chat->reading_buffer());
     return true;
 }
 
