@@ -18,7 +18,7 @@ public:
 		return tsf;
 	}
 
-	bool OnInit(HWND hWnd, std::wstring_view buffer);
+	bool OnInit(HWND hWnd, wchar_t* buffer, std::size_t bufferSize);
 	bool OnDestroy();
 	void SetFocus(bool isFocus);
 	void SetBufferLength(std::size_t buffer_len);
@@ -27,14 +27,9 @@ public:
 
 	HWND window_handle() { return m_hWnd; }
 	std::vector<std::wstring> candidates() { return m_vCandidates; }
-	const wchar_t* reading() { return string_buffer_.data(); }
-	std::size_t reading_len() { return string_buffer_length_; }
-	bool is_reading_upate() { 
-		bool is_update = is_string_buffer_update_; 
-		is_string_buffer_update_ = false; 
-		return is_update; 
-	}
-	// const std::wstring& select() { return m_strSelectedStr; }
+	const wchar_t* reading() { return m_strContentBuffer; }
+	std::size_t reading_len() { return m_strContentBufferLength; }
+	bool is_reading_upate();
 
 	UINT candidate_count() { return m_ulCandidateCount; }
 	UINT candidate_page_count() { return m_ulCandidatePageCount; }
@@ -42,8 +37,8 @@ public:
 	UINT candidate_page_size() { return m_ulCandidatePageSize > 0 ? m_ulCandidatePageSize : 1; }
 	UINT candidate_page_max_size() { return m_ulCandidatePageMaxSize; }
 	UINT candidate_select_index() { return m_ulCandidateSelect; }
-	UINT candidate_select_start() { return selection_.acpStart; }
-	UINT candidate_select_end() { return selection_.acpEnd; }
+	UINT candidate_select_start() { return m_acpContentSelection.acpStart; }
+	UINT candidate_select_end() { return m_acpContentSelection.acpEnd; }
 
 	bool enable_native() { return m_bImeEnableNative; }
 	LANGID lang_id() { return m_langId; }
@@ -169,8 +164,8 @@ private:
 	DWORD text_store_acp_sink_mask_;
 
 	std::vector<std::wstring> m_vCandidates;
-	std::wstring m_strReading;
-	std::wstring m_strSelectedStr;
+	/*std::wstring m_strReading;
+	std::wstring m_strSelectedStr;*/
 	std::wstring m_strDocContent;
 	TS_SELECTION_ACP m_docSelection{};
 
@@ -184,24 +179,28 @@ private:
 	//   0: No lock.
 	//   TS_LF_READ: read-only lock.
 	//   TS_LF_READWRITE: read/write lock.
-	DWORD current_lock_type_ = 0;
+	DWORD m_dwContentLockType = 0;
 	// Queue of the lock request used in RequestLock().
-	std::deque<DWORD> lock_queue_;
+	std::deque<DWORD> m_dqLockQueue;
 
-	//  |string_buffer_| contains committed string and composition string.
+	//  |m_strContentBuffer| contains committed string and composition string.
 	//  Example: "aoi" is committed, and "umi" is under composition.
-	//    |string_buffer_|: "aoiumi"
-	//    |committed_size_|: 3
-	std::wstring_view string_buffer_;
-	bool is_string_buffer_update_ = false;
-	std::size_t string_buffer_length_ = 0;
-	size_t committed_size_ = 0;
+	//    |m_strContentBuffer|: "aoiumi"
+	//    |m_iComposeCommittedSize|: 3
+	wchar_t* m_strContentBuffer = nullptr;
+	std::size_t m_strContentBufferSize = 0;
+	std::size_t m_strContentBufferLength = 0;
+
+	size_t m_iComposeCommittedSize = 0;
+	// is content changed
+	bool m_bIsContentUpdate = false;
+
 	//  |selection_start_| and |selection_end_| indicates the selection range.
 	//  Example: "iue" is selected
 	//    |string_buffer_|: "aiueo"
 	//    |selection_.start()|: 1
 	//    |selection_.end()|: 4
-	TS_SELECTION_ACP selection_{};
+	TS_SELECTION_ACP m_acpContentSelection{};
 
 	bool m_bIsFocused = false;
 	bool m_bImeEnableNative = true; // true， 中文； false, 英文

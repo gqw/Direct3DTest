@@ -2,53 +2,20 @@
 #include "game.h"
 #include "Win32Application.h"
 
-#include "imgui_internal.h"
-
-int WStringLenToUtf8Length1(char const* str, int wend) {
-	int len = 0, index = 0;
-	while (index < wend) {
-		if (*str == '\0') break;
-
-		index++;
-		if ((*str & 0x80) == 0) {
-			str++;
-			len += 1;
-		}
-		else if ((*str & 0xF0) == 0xF0) {
-			str += 4;
-			len += 4;
-		}
-		else if ((*str & 0xE0) == 0xE0) {
-			str += 3;
-			len += 3;
-		}
-		else if ((*str & 0xC0) == 0xC0) {
-			str += 2;
-			len += 2;
-		}
-	}
-	return len;
-}
-
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE prevInstance,
 	LPWSTR cmdLine, int cmdShow)
 {
     UNREFERENCED_PARAMETER(hInstance);
     UNREFERENCED_PARAMETER(cmdLine);
 
-	std::string s = wstring_to_utf8(L"好");
-	int len = WStringLenToUtf8Length1(s.c_str(), 15);
-
-	ImTextCountCharsFromUtf8(s.c_str(), s.c_str() + 3);
-
     std::shared_ptr<int> a = std::make_shared<int>(1);
     std::weak_ptr<int> b = a;
     auto c = b.lock();
     
-    if (!logger::get().init("logs/test.log")) {
+    if (!logger::get().init("logs/" PROJECT_NAME ".log")) {
         return 1;
     }
-    logger::get().set_level(spdlog::level::debug);
+    logger::get().set_level(spdlog::level::trace);
 
 	// LOG_INFO("test {}", 1);
 	// PRINT_INFO("test print log, %d", 55);

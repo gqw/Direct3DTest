@@ -27,8 +27,8 @@
 #include <tuple>
 
 #include <imgui.h>
-#include <imgui_impl_win32.h>
-#include <imgui_impl_dx11.h>
+#include <backends/imgui_impl_win32.h>
+#include <backends/imgui_impl_dx11.h>
 
 #ifdef _UNICODE
 #   define tstring std::wstring

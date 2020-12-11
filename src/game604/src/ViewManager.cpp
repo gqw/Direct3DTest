@@ -19,13 +19,13 @@ bool ViewManager::RegistView(const std::shared_ptr<ViewInterface>& view) {
 
 bool ViewManager::OnInit(HWND hwnd) {
     RegistView(std::make_shared<ViewSetting>("Hello"));
-    auto chat = std::make_shared<ViewChat>("Chat");
+	auto chat = std::make_shared<ViewChat>("Chat");
 
-    RegistView(std::make_shared<ViewInputMothod>("InputMothod", chat));
-    
-    RegistView(chat);
+	RegistView(std::make_shared<ViewInputMothod>("InputMothod", chat));
 
-    TsfInputMethodStore::get().OnInit(hwnd, chat->reading_buffer());
+	RegistView(chat);
+
+	TsfInputMethodStore::get().OnInit(hwnd, chat->reading_buffer().data(), chat->reading_buffer().size());/**/
     return true;
 }
 

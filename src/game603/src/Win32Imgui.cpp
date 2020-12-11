@@ -68,16 +68,16 @@ void Win32Imgui::OnDestory() {
 }
 
 LRESULT Win32Imgui::OnMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	if (m_imm.IMMSubclassProc(hWnd, msg, wParam, lParam) == 0)  return 0;
+	//if (m_imm.IMMSubclassProc(hWnd, msg, wParam, lParam) == 0)  return 0;
 
-	switch (msg)
-	{
-	case WM_SETFOCUS: {
-		m_imm.OnSetFocus();
-		break;
-	}
-	default:
-		break;
-	}
+	//switch (msg)
+	//{
+	//case WM_SETFOCUS: {
+	//	// m_imm.OnSetFocus();
+	//	break;
+	//}
+	//default:
+	//	break;
+	//}
 	return !ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
 }

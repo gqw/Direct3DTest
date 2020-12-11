@@ -116,12 +116,15 @@ LRESULT CALLBACK Win32Application::WndProc(HWND hWnd, UINT msg, WPARAM wParam, L
         break;
 
     case WM_KEYDOWN: {
-        if (wParam == VK_SPACE) {
-            // if (pGame) pGame->OnChangeFullscreen();
-        }
+        /*if (wParam == VK_SPACE) {
+            if (pGame) pGame->OnChangeFullscreen();
+        }*/
         break;
     }
-
+	case WM_USER_FULLSCREEN: {
+		if (pGame) pGame->OnChangeFullscreen();
+		break;
+	}
     case WM_CHAR: {
         break;
     }

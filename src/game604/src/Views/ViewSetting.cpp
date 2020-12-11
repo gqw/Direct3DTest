@@ -14,7 +14,7 @@ void ViewSetting::OnRender() {
 
 
 		if (ImGui::Button("Fullscreen")) {
-			Game::Inst().OnChangeFullscreen();
+			PostMessage(Game::Inst().window_handle(), WM_USER_FULLSCREEN, 0, 0);
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Switch IME")) {

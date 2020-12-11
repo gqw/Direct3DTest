@@ -2,7 +2,7 @@
 #include "../Game.h"
 
 bool ViewChat::OnInit() {
-	m_strChatContent.resize(1024);
+	m_strChatContent.resize(MAX_BUFFER_LENGTH);
 	return true;
 }
 
@@ -25,6 +25,9 @@ int GetUtf8Length(char const* str, int end) {
 		else if ((*str & 0xC0) == 0xC0) {
 			str += 2;
 			index += 2;
+		}
+		else {
+			return 0;
 		}
 	}
 	return len;
@@ -52,6 +55,9 @@ int WStringLenToUtf8Length(char const* str, int wend) {
 			str += 2;
 			len += 2;
 		}
+		else {
+			return 0;
+		}
 	}
 	return len;
 }
@@ -66,15 +72,19 @@ int ViewChat::InputCallback(ImGuiInputTextCallbackData* data) {
 
 	std::string s(wstring_to_utf8(std::wstring(pViewChat->m_strReadingBuffer.c_str())));
 	// if (!s.empty()) 
+	try
 	{
 		s.copy(data->Buf, std::size_t(data->BufSize) - 1);
 		data->Buf[s.length()] = '\0';
-		data->BufTextLen = s.length();
+		data->BufTextLen = strlen(data->Buf);
 		data->BufDirty = true;
 		data->CursorPos = WStringLenToUtf8Length(s.c_str(), TsfInputMethodStore::get().candidate_select_end());
 
 		
-		LOG_DEBUG("callback: {}, textlen: {}, cursor: {}", data->Buf, data->BufTextLen, data->CursorPos);
+		LOG_DEBUG("callback: {}, textlen: {}, cursor: {}, s:{}, s.len: {}", data->Buf, data->BufTextLen, data->CursorPos, s, s.length());
+	}
+	catch (...) {
+		STM_DEBUG() << "exception";
 	}
 	// LOG_DEBUG("data: {}, {}, {} pos: {}", data->Buf, data->SelectionEnd, data->SelectionEnd, data->CursorPos);
 	return 0;
@@ -156,7 +166,7 @@ void ViewChat::OnRender() {
 			}
 			
 			
-			TsfInputMethodStore::get().SetCorsorPos(GetUtf8Length(content.data(), m_iLastContentPos));
+			TsfInputMethodStore::get().SetCorsorPos(GetUtf8Length(content.data(), (int)m_iLastContentPos));
 		}
 		if (isActivie != m_lastIsFocus) {
 			TsfInputMethodStore::get().SetFocus(isActivie);
@@ -246,8 +256,12 @@ void ViewChat::OnRender() {
 		ImGui::SameLine();
 		if (ImGui::Button("Send")) {
 			(*plist).emplace_back(m_strChatContent);
+			
 			m_strChatContent.clear();
 			m_strChatContent.resize(1024);
+			m_strReadingBuffer.clear();
+			m_strReadingBuffer.resize(1024);
+			TsfInputMethodStore::get().SetBufferLength(0);
 		};
 		
 	}

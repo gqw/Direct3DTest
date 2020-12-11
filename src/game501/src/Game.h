@@ -1,7 +1,6 @@
 #pragma once
 #include "pch.h"
 
-
 class Game {
 public:
     Game(tstring_view title, tstring_view className, UINT width, UINT height)

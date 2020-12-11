@@ -152,8 +152,8 @@ HRESULT MeowTextApp::BeginUIElement(DWORD dwUIElementId, BOOL *pbShow)
 	{
 		*pbShow = FALSE;
 
-		CComPtr<ITfContext> context;
-		HRESULT hr;
+		//CComPtr<ITfContext> context;
+		//HRESULT hr;
 		// hr = documentmgr->CreateContext(clientid, 0, (ITfContextOwnerCompositionSink*)this, &context, &editcookie);
 		// hr = threadmgr->SetFocus(documentmgr.Get());
 		// hr = documentmgr->Push(context);

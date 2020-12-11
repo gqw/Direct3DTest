@@ -10,8 +10,13 @@ bool ViewInputMothod::OnInit() {
 }
 
 void ViewInputMothod::OnRender() {
-	ImGui::Begin("input method:", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNav);
 
+	static std::once_flag flag1;
+	std::call_once(flag1, []() {
+		auto chatWindowSize = ImVec2(300.0f, 300.0f);
+		ImGui::SetNextWindowSize(chatWindowSize);
+	});
+	ImGui::Begin("input method:", 0, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoNav);
 	
 
 	auto& tsf = TsfInputMethodStore::get();

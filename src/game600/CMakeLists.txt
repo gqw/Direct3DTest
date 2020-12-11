@@ -7,10 +7,10 @@ file(GLOB SOURCE_FILES ./src/*.cpp)
 file(GLOB IMGUI_SOURCE_FILES 
 	${CMAKE_HOME_DIRECTORY}/third/imgui/*.h 
 	${CMAKE_HOME_DIRECTORY}/third/imgui/*.cpp
-	${CMAKE_HOME_DIRECTORY}/third/imgui/examples/imgui_impl_win32.h
-	${CMAKE_HOME_DIRECTORY}/third/imgui/examples/imgui_impl_win32.cpp
-	${CMAKE_HOME_DIRECTORY}/third/imgui/examples/imgui_impl_dx11.h
-	${CMAKE_HOME_DIRECTORY}/third/imgui/examples/imgui_impl_dx11.cpp
+	${CMAKE_HOME_DIRECTORY}/third/imgui/backends/imgui_impl_win32.h
+	${CMAKE_HOME_DIRECTORY}/third/imgui/backends/imgui_impl_win32.cpp
+	${CMAKE_HOME_DIRECTORY}/third/imgui/backends/imgui_impl_dx11.h
+	${CMAKE_HOME_DIRECTORY}/third/imgui/backends/imgui_impl_dx11.cpp
 )
 
 source_group("Imgui" FILES ${IMGUI_SOURCE_FILES}) 

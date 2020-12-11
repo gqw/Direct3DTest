@@ -1,19 +1,14 @@
 #include "Win32Imm.h"
 
-
+#ifndef NOMINMAX
+#undef min
+#undef max
+#endif
 using Microsoft::WRL::ComPtr;
 
 bool Win32Imm::OnInit(HWND hWnd) {
 	ASSERT_THROW(IsWindow(hWnd), "imm init failed.");
 
-	// CoInitialize(NULL);
-	//hr = CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)&threadmgr);
-
-	//// Active
-	//hr = threadmgr->QueryInterface(IID_ITfThreadMgrEx, (LPVOID*)&threadmgrex);
-	//hr = threadmgrex->ActivateEx(&clientid, TF_TMAE_UIELEMENTENABLEDONLY);
-
-	// THROW_IF_FAILED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED));
 	Microsoft::WRL::ComPtr<ITfThreadMgr> imeThreadMgr;
 	THROW_IF_FAILED(CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, &imeThreadMgr));
 	imeThreadMgr->QueryInterface(IID_ITfThreadMgrEx, (LPVOID*)&m_imeThreadMgr);
@@ -87,52 +82,66 @@ HRESULT STDMETHODCALLTYPE Win32Imm::BeginUIElement(
 	}
 };
 
+
 HRESULT STDMETHODCALLTYPE Win32Imm::UpdateUIElement(
 	/* [in] */ DWORD dwUIElementId) {
+	//if (!m_bIsFocused) {
+	//	return S_OK;
+	//}
+
+	m_vCandidates.clear();
+
 	ComPtr<ITfUIElement> uiElement;
-	if (SUCCEEDED(m_imeUIElementMgr->GetUIElement(dwUIElementId, &uiElement)))
-	{
-		ComPtr<ITfCandidateListUIElement> candidatelistuielement;
-		if (SUCCEEDED(uiElement->QueryInterface(IID_ITfCandidateListUIElement, (LPVOID*)&candidatelistuielement)))
-		{
-			m_vCandidates.clear();
+	if (FAILED(m_imeUIElementMgr->GetUIElement(dwUIElementId, &uiElement))) return S_OK;
 
-			UINT count;
-			candidatelistuielement->GetCount(&count);
-			UINT pcount;
-			UINT pages[10];
-			candidatelistuielement->GetPageIndex(pages, 10, &pcount);
+	//ComPtr<ITfReadingInformationUIElement> uiReading;
+	//if (SUCCEEDED(uiElement->QueryInterface(IID_ITfReadingInformationUIElement, &uiReading))) {
+	//	BSTR reading = nullptr;
+	//	if (SUCCEEDED(uiReading->GetString(&reading))) {
+	//		m_strReading = reading;
+	//		::SysFreeString(reading);
+	//	}
+	//}
 
-			UINT cpage;
-			candidatelistuielement->GetCurrentPage(&cpage);
+	ComPtr<ITfCandidateListUIElement> candidatelistuielement;
+	if (FAILED(uiElement->QueryInterface(IID_ITfCandidateListUIElement, &candidatelistuielement))) return S_OK;
 
-			UINT end = count;
-			UINT start = 0;
-			if (cpage != pcount - 1) {
-				end = pages[cpage + 1];
-			}
-			start = pages[cpage];
-			if (pcount == 0) {
-				end = start = 0;
-			}
+	candidatelistuielement->GetCount(&m_ulCandidateCount);
+	candidatelistuielement->GetCurrentPage(&m_ulCandidatePageIndex);
+	candidatelistuielement->GetSelection(&m_ulCandidateSelect);
+	candidatelistuielement->GetPageIndex(nullptr, 0, &m_ulCandidatePageCount);
 
-			{
-				for (UINT i = start; i < end; ++i)
-				{
-					BSTR candidate;
-					if (SUCCEEDED(candidatelistuielement->GetString(i, &candidate)))
-					{
-						LPWSTR text = candidate;
-						
-						m_vCandidates.push_back(text);
-					}
-				}
-			}
-			//InvalidateRect(hwnd, NULL, NULL);
-			//candidatelistuielement->GetSelection(&m_candidateSelection);
-		}
+	if (m_ulCandidatePageCount <= 0) return S_OK;
+
+	std::vector<UINT> pages;
+	pages.resize(m_ulCandidatePageCount);
+	candidatelistuielement->GetPageIndex(pages.data(), (UINT)pages.size(), &m_ulCandidatePageCount);
+	m_ulCandidatePageStart = pages[m_ulCandidatePageIndex];
+	m_ulCandidatePageSize = (m_ulCandidatePageIndex < m_ulCandidatePageCount - 1) ?
+		std::min(m_ulCandidateCount, pages[m_ulCandidatePageIndex + 1]) - m_ulCandidatePageStart :
+		m_ulCandidateCount - m_ulCandidatePageStart;
+
+	m_ulCandidatePageMaxSize = std::max(m_ulCandidatePageMaxSize, m_ulCandidatePageSize);
+
+	UINT end = m_ulCandidateCount;
+	UINT start = 0;
+	if (m_ulCandidatePageIndex != m_ulCandidatePageCount - 1) {
+		end = pages[m_ulCandidatePageIndex + 1];
+	}
+	start = pages[m_ulCandidatePageIndex];
+	if (m_ulCandidatePageCount == 0) {
+		end = start = 0;
 	}
 
+	for (UINT i = start; i < end; ++i)
+	{
+		BSTR candidate = nullptr;
+		if (SUCCEEDED(candidatelistuielement->GetString(i, &candidate)))
+		{
+			m_vCandidates.push_back(candidate);
+			::SysFreeString(candidate);
+		}
+	}
 	return S_OK;
 };
 
@@ -179,6 +188,7 @@ bool Win32Imm::OnDestroy() {
 }
 
 LRESULT Win32Imm::IMMSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	return 0;
 	switch (uMsg) {
 	case WM_DESTROY:
 	{

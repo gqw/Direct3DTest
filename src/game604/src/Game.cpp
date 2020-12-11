@@ -34,7 +34,7 @@ bool Game::OnInit(HWND hWnd) {
     CreateResources();
 	CreateVectexShader();
 	CreatePixelShader();
-    LoadBackgroundPng();
+   //  LoadBackgroundPng();
 
     if (m_win32Imgui) m_win32Imgui->OnInit(hWnd, m_d3dDevice.Get(), m_d3dContext.Get());
     return true;
@@ -47,16 +47,16 @@ void Game::OnRender() {
 	m_d3dContext->RSSetViewports(1, &viewport);
 	m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
 
-	UINT stride = sizeof(SimpleVertex), offset = 0;
-    m_d3dContext->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
-	m_d3dContext->IASetInputLayout(m_vertexLayout.Get());
-	m_d3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	m_d3dContext->VSSetShader(m_vertexShader.Get(), nullptr, 0);
+	//UINT stride = sizeof(SimpleVertex), offset = 0;
+ //   m_d3dContext->IASetVertexBuffers(0, 1, m_vertexBuffer.GetAddressOf(), &stride, &offset);
+	//m_d3dContext->IASetInputLayout(m_vertexLayout.Get());
+	//m_d3dContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	//m_d3dContext->VSSetShader(m_vertexShader.Get(), nullptr, 0);
 
-	m_d3dContext->PSSetShader(m_pixelShader.Get(), nullptr, 0);
-    m_d3dContext->PSSetSamplers(0, 1, m_samplerLinear.GetAddressOf());
-	m_d3dContext->PSSetShaderResources(0, 1, m_backgroundView.GetAddressOf());
-    m_d3dContext->Draw(3, 0);
+	//m_d3dContext->PSSetShader(m_pixelShader.Get(), nullptr, 0);
+ //   m_d3dContext->PSSetSamplers(0, 1, m_samplerLinear.GetAddressOf());
+	//m_d3dContext->PSSetShaderResources(0, 1, m_backgroundView.GetAddressOf());
+ //   m_d3dContext->Draw(3, 0);
 
     if (m_win32Imgui) m_win32Imgui->OnRender();
     Present();

@@ -64,3 +64,9 @@ ImGui Demo
 ![game602](./doc/captures/game602.png)
 
 使用ImGui，输入法处理
+
+### game604
+
+![game604](./doc/captures/game604.png)
+
+使用ImGui，tsf输入法处理

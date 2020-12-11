@@ -5,8 +5,9 @@
 
 class ViewChat : public ViewInterface
 {
+    static constexpr uint32_t MAX_BUFFER_LENGTH = 1024;
 public:
-    ViewChat(std::string_view name) : ViewInterface(name) { m_strReadingBuffer.resize(1024); };
+    ViewChat(std::string_view name) : ViewInterface(name) { m_strReadingBuffer.resize(MAX_BUFFER_LENGTH); };
     virtual ~ViewChat() {}
     virtual bool OnInit();
     virtual void OnRender();

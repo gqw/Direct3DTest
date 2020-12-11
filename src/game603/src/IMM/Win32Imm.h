@@ -21,6 +21,15 @@ public:
 
 	std::vector<std::wstring> candidates() { return m_vCandidates; }
 
+	std::wstring reading() { return L""; }
+
+	UINT candidate_count() { return m_ulCandidateCount; }
+	UINT candidate_page_count() { return m_ulCandidatePageCount; }
+	UINT candidate_page_index() { return m_ulCandidatePageIndex; }
+	UINT candidate_page_size() { return m_ulCandidatePageSize > 0 ? m_ulCandidatePageSize : 1; }
+	UINT candidate_page_max_size() { return m_ulCandidatePageMaxSize; }
+	UINT candidate_select_index() { return m_ulCandidateSelect; }
+
 private:
 	HRESULT	STDMETHODCALLTYPE	QueryInterface(REFIID, LPVOID*);
 	DWORD	STDMETHODCALLTYPE	AddRef();
@@ -57,4 +66,11 @@ private:
 	DWORD m_dwRefernce = 0;
 
 	std::vector<std::wstring> m_vCandidates;
+	UINT m_ulCandidateCount = 0;
+	UINT m_ulCandidatePageCount = 0;
+	UINT m_ulCandidatePageIndex = 0;
+	UINT m_ulCandidatePageStart = 0;
+	UINT m_ulCandidatePageSize = 0;
+	UINT m_ulCandidatePageMaxSize = 0;
+	UINT m_ulCandidateSelect = 0;
 };

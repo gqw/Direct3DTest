@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "Win32Imgui.h"
 
+#define  WM_USER_FULLSCREEN  (WM_USER + 1000)
 class Game {
 public:
     static Game& Inst() { static Game game; return game; }
@@ -26,6 +27,7 @@ public:
     const tstring& title() { return m_strTitle; }
     const tstring& className() { return m_strClassName; }
     BOOL fullscreen() { return m_isFullscreen; }
+    HWND window_handle() { return m_hWnd; }
 
 private:
     void CreateDevice();

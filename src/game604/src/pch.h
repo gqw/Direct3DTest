@@ -58,18 +58,89 @@
 #   define tstring_to_string(str) (str)
 #	define D3DX11CompileFromFile D3DX11CompileFromFileA
 #endif
+//
+//inline std::wstring utf8_to_wstring(const std::string& str)
+//{
+//	try
+//	{
+//		std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+//		return myconv.from_bytes(str);
+//	}
+//	catch (...)
+//	{
+//		return L"";
+//	}
+//}
 
 inline std::wstring utf8_to_wstring(const std::string& str)
 {
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-	return myconv.from_bytes(str);
+	int  len = 0;
+	len = str.length();
+	int  unicodeLen = ::MultiByteToWideChar(CP_UTF8,
+		0,
+		str.c_str(),
+		-1,
+		NULL,
+		0);
+	wchar_t* pUnicode;
+	pUnicode = new  wchar_t[unicodeLen + 1];
+	memset(pUnicode, 0, (unicodeLen + 1) * sizeof(wchar_t));
+	::MultiByteToWideChar(CP_UTF8,
+		0,
+		str.c_str(),
+		-1,
+		(LPWSTR)pUnicode,
+		unicodeLen);
+	std::wstring  rt;
+	rt = (wchar_t*)pUnicode;
+	delete  pUnicode;
+
+	return  rt;
 }
+
+//inline std::string wstring_to_utf8(const std::wstring& str)
+//{
+//	try
+//	{
+//		std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
+//		return myconv.to_bytes(str);
+//	}
+//	catch (...)
+//	{
+//		return "";
+//	}
+//}
 
 inline std::string wstring_to_utf8(const std::wstring& str)
 {
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-	return myconv.to_bytes(str);
+	char* pElementText;
+	int    iTextLen;
+	// wide char to multi char
+	iTextLen = WideCharToMultiByte(CP_UTF8,
+		0,
+		str.c_str(),
+		-1,
+		NULL,
+		0,
+		NULL,
+		NULL);
+	pElementText = new char[iTextLen + 1];
+	memset((void*)pElementText, 0, sizeof(char) * (iTextLen + 1));
+	::WideCharToMultiByte(CP_UTF8,
+		0,
+		str.c_str(),
+		-1,
+		pElementText,
+		iTextLen,
+		NULL,
+		NULL);
+	std::string strText;
+	strText = pElementText;
+	delete[] pElementText;
+	return strText;
 }
+
+
 
 inline void ThrowIfFailed(tstring_view file, uint32_t lineNo, HRESULT hr) {
 	if (SUCCEEDED(hr)) return;
